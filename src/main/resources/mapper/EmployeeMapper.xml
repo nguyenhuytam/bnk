@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo_test.mapper.EmployeeMapper">
+    <select id="getEmployee" resultType="com.example.demo_test.dto.request.EmployeeRequest">
+        SELECT e.*, p.name AS positionName
+        FROM employee e
+                 INNER JOIN position p ON e.idPosition = p.id
+    </select>
+
+    <select id="create" resultType="com.example.demo_test.dto.request.EmployeeRequest"
+          parameterType="com.example.demo_test.dto.request.EmployeeRequest">
+        insert into employee(
+                             id,firstName,lastName,email,name,password,address,idposition,phone,imgFile
+        )values (
+            gen_random_uuid(),
+              #{firstName},
+              #{lastName},
+              #{email},
+              #{name},
+              #{password},
+              #{address},
+            CASE WHEN TRIM(#{idPosition}) = '' THEN '3' ELSE #{idPosition} END,
+            #{Phone},
+            #{imgFile}
+                        )
+    </select>
+
+    <select id="getId" resultType="com.example.demo_test.dto.request.EmployeeRequest"
+    parameterType="com.example.demo_test.dto.request.EmployeeRequest">
+        select *from employee where id = #{id}
+    </select>
+
+    <select id="checkName" resultType="com.example.demo_test.dto.request.EmployeeRequest" parameterType="string">
+            select *from employee where name = #{name} and email = #{email}
+    </select>
+
+    <delete id="delete" parameterType="String">
+        delete from employee where id =#{id}
+    </delete>
+
+    <select id="checkCodeUsed" resultType="Integer">
+        SELECT COUNT(*) FROM "employee" WHERE email = #{email}
+        <if test="id != null and id != ''">
+            AND id::uuid != cast(#{id} as uuid)
+        </if>
+    </select>
+
+
+
+    <select id="editedEmployee"  resultType="com.example.demo_test.dto.request.EmployeeRequest"
+            parameterType="com.example.demo_test.dto.request.EmployeeRequest">
+        update employee
+        set
+            firstName = #{firstName},
+            lastName = #{lastName},
+            email = #{email},
+            name = #{name},
+            password = #{password},
+            address = #{address},
+        idposition = COALESCE(CAST(#{idPosition} AS INTEGER), 3),
+            phone = #{phone}
+        <where>
+            id = #{id}
+        </where>
+    </select>
+
+    <select id="search" parameterType="map"
+            resultMap="employeeResultMap"
+    resultType="com.example.demo_test.dto.request.EmployeeRequest">
+        select * from employee
+        <where>
+            <if test="email != null and email !='' ">
+                email = #{email}
+            </if>
+            <if test="name != null and name != '' ">
+                 name ILIKE CONCAT('%' || #{name} || '%')
+        </if>
+        </where>
+    </select>
+    <resultMap id="employeeResultMap" type="com.example.demo_test.dto.request.EmployeeRequest">
+        <id property="id" column="employee_id" />
+    </resultMap>
+
+    <select id="login" resultType="com.example.demo_test.dto.request.EmployeeRequest"
+    resultMap="employeeResultMap"
+    parameterType="com.example.demo_test.dto.request.EmployeeRequest">
+        select * from employee
+        <where>
+            name = #{name} and password = #{password}
+        </where>
+    </select>
+
+
+</mapper>
